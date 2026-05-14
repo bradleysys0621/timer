@@ -395,25 +395,33 @@
             return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // 歌曲選擇
-        songBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // 更新按鈕樣式
-                songBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+        // 歌曲播放功能
+        function playSongAtIndex(index) {
+            const btn = songBtns[index];
+            if (!btn) return;
 
-                // 讀取並播放音樂
-                const src = btn.getAttribute('data-src');
-                const songName = btn.textContent;
-                
-                audioPlayer.src = src;
-                audioPlayer.play().then(() => {
-                    btnPlayPause.textContent = '⏸️ 暫停';
-                }).catch(err => {
-                    console.log('自動播放被阻擋或檔案路徑有誤:', err);
-                });
-                
-                currentSongDisplay.textContent = `現正播放: ${songName}`;
+            // 更新按鈕樣式
+            songBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // 讀取並播放音樂
+            const src = btn.getAttribute('data-src');
+            const songName = btn.textContent;
+            
+            audioPlayer.src = src;
+            audioPlayer.play().then(() => {
+                btnPlayPause.textContent = '⏸️ 暫停';
+            }).catch(err => {
+                console.log('播放被阻擋或檔案路徑有誤:', err);
+            });
+            
+            currentSongDisplay.textContent = `現正播放: ${songName}`;
+        }
+
+        // 歌曲按鈕點擊事件
+        songBtns.forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                playSongAtIndex(index);
             });
         });
 
@@ -465,10 +473,18 @@
             audioPlayer.volume = e.target.value;
         });
         
-        // 音樂結束時重置播放按鈕
+        // 音樂結束時自動切換下一首 (循環播放)
         audioPlayer.addEventListener('ended', () => {
-            btnPlayPause.textContent = '▶️ 播放 / 暫停';
-            audioPlayer.currentTime = 0;
+            let currentIndex = -1;
+            songBtns.forEach((btn, index) => {
+                if (btn.classList.contains('active')) {
+                    currentIndex = index;
+                }
+            });
+
+            // 計算下一首的索引，若到最後一首則回到第一首
+            let nextIndex = (currentIndex + 1) % songBtns.length;
+            playSongAtIndex(nextIndex);
         });
     </script>
 </body>
